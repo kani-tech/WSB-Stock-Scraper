@@ -16,13 +16,6 @@ async function scrapeComments(url) {
     const page = await browser.newPage();
     await page.goto(url)
 
-    let [numComments] = await page.$x('//*[@id="more_t1_gwryyv6"]/span')
-    const txt = await numComments.getProperty('textContent');
-    const rawTxt = await txt.jsonValue()
-
-
-    var numb = rawTxt.match(/\d/g);
-    numb = Number(numb.join(""));
 
 
 
@@ -63,9 +56,6 @@ function countOccurences(arr) {
 }
 
 
-const myComments = scrapeComments('https://old.reddit.com/r/wallstreetbets/comments/n3sdrh/daily_discussion_thread_for_may_03_2021/').then(response => { countOccurences(response) })
-
-
 
 app.get('/', async function (req, res) {
     let my_arr = []
@@ -81,3 +71,4 @@ app.listen(PORT, function (err) {
         console.log('Server running on port', PORT)
     }
 })
+
