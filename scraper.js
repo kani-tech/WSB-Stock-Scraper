@@ -8,6 +8,9 @@ const app = express();
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const OLD_REDDIT = 'https://old.reddit.com/r/wallstreetbets/'
+
+
 
 const stockSchema = new Schema({
     ticker: {
@@ -34,15 +37,48 @@ mongoose.connection.on('connected', () => {
 
 const PORT = process.env.PORT || 5000
 
-async function scrapeComments(url) {
+async function getId(url) {
+    const browser = await puppeteer.launch()
+    const page = await browser.newPage();
+    await page.goto(url)
+
+    const info = await page.$$('#siteTable')
+
+    console.log('length', info.length)
+
+    let id = ''
+    for (let i = 0; i < info.length; i++) {
+        const result = (await (await info[i].getProperty('innerHTML')).jsonValue())
+
+        const PATTERN = 'discussion'
+        const splitResult = result.split(' ').filter(word => word.includes(PATTERN))
+
+        const findUrl = splitResult[0].slice(37)
+
+        for (let n = 0; n < findUrl.length; n++) {
+            if (findUrl[n] !== '/') {
+                id += findUrl[n]
+            } else {
+                break;
+            }
+        }
+
+    }
+
+    browser.close()
+
+    return id
+}
+
+
+
+
+async function scrapeComments(url, key) {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.goto(url)
 
-
-
-
-    const comments = await page.$$('#siteTable_t3_n3sdrh')
+    const comments = await page.$$(`#siteTable_t3_${key}`)
 
 
     let stockArr = []
@@ -50,7 +86,7 @@ async function scrapeComments(url) {
 
         const comment = String(await (await comments[i].getProperty('innerText')).jsonValue());
 
-        console.log('comment', comment)
+        //console.log('comment', comment)
 
         const splitComment = comment.split(' ').filter(word => word.length <= 4)
 
@@ -96,7 +132,12 @@ function countOccurences(arr) {
 app.post('/', async function (req, res) {
 
     let my_arr = []
-    await scrapeComments('https://old.reddit.com/r/wallstreetbets/comments/n3sdrh/daily_discussion_thread_for_may_03_2021/?limit=500').then(function (response) {
+
+    const key = await getId(OLD_REDDIT);
+
+    const url = `https://old.reddit.com/r/wallstreetbets/comments/${key}/daily_discussion_thread_for_may_04_2021/?limit=500`
+
+    await scrapeComments(url, key).then(function (response) {
         my_arr = Object.entries(countOccurences(response));
     })
 
