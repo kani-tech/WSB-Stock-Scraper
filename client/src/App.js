@@ -7,15 +7,17 @@ import Table from 'react-bootstrap/Table'
 
 
 function App() {
+  let interval = null
 
   const [stocks, setStocks] = useState()
 
   async function getStocks() {
     const response = await axios({
       url: 'http://localhost:5000/',
-      method: 'get',
+      method: 'post',
     })
-    stocks.push(response)
+    //console.log(response.data)
+    setStocks(response.data)
   }
 
   const renderStocks = (ticker, index) => {
@@ -24,18 +26,33 @@ function App() {
       <td>{ticker.count}</td>
     </tr>
   }
+
+  console.log('stocks', stocks)
+  useEffect(() => {
+    getStocks();
+    interval = setInterval(() => {
+      getStocks();
+    }, 300000);
+
+    return () => {
+      clearInterval(interval)
+    }
+  }, [])
+
   return (
-    <Table striped bordered hover>
-      <thead>
-        <tr>
-          <th>Symbol</th>
-          <th>Occurences</th>
-        </tr>
-      </thead>
-      <tbody>
-        {stocks.map(renderStocks)}
-      </tbody>
-    </Table>
+
+    <h1>Hello World</h1>
+    /*  <Table striped bordered hover>
+       <thead>
+         <tr>
+           <th>Symbol</th>
+           <th>Occurences</th>
+         </tr>
+       </thead>
+       <tbody>
+         {stocks.map(renderStocks)}
+       </tbody>
+     </Table> */
   )
 }
 

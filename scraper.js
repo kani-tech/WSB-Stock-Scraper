@@ -57,7 +57,7 @@ function countOccurences(arr) {
 
 
 
-app.get('/', async function (req, res) {
+app.post('/', async function (req, res) {
     let my_arr = []
     await scrapeComments('https://old.reddit.com/r/wallstreetbets/comments/n3sdrh/daily_discussion_thread_for_may_03_2021/?limit=500').then(response => { my_arr.push(countOccurences(response)) })
 
