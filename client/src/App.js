@@ -9,7 +9,7 @@ import Table from 'react-bootstrap/Table'
 function App() {
   let interval = null
 
-  const [stocks, setStocks] = useState()
+  const [stocks, setStocks] = useState([['Tsla', 4]])
 
   async function getStocks() {
     const response = await axios({
@@ -22,7 +22,7 @@ function App() {
 
   const renderStocks = (ticker, index) => {
     return <tr key={index}>
-      <td>{ticker.name}</td>
+      <td>{ticker.ticker}</td>
       <td>{ticker.count}</td>
     </tr>
   }
@@ -32,7 +32,7 @@ function App() {
     getStocks();
     interval = setInterval(() => {
       getStocks();
-    }, 300000);
+    }, 60000);
 
     return () => {
       clearInterval(interval)
@@ -40,19 +40,21 @@ function App() {
   }, [])
 
   return (
+    <div>
+      <h1>Hello World</h1>
+      <Table striped bordered hover>
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Occurences</th>
+          </tr>
+        </thead>
+        <tbody>
+          {stocks.map(renderStocks)}
+        </tbody>
+      </Table>
+    </div>
 
-    <h1>Hello World</h1>
-    /*  <Table striped bordered hover>
-       <thead>
-         <tr>
-           <th>Symbol</th>
-           <th>Occurences</th>
-         </tr>
-       </thead>
-       <tbody>
-         {stocks.map(renderStocks)}
-       </tbody>
-     </Table> */
   )
 }
 
