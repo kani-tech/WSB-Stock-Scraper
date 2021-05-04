@@ -58,9 +58,14 @@ function countOccurences(arr) {
 
 
 app.post('/', async function (req, res) {
-    let my_arr = []
-    await scrapeComments('https://old.reddit.com/r/wallstreetbets/comments/n3sdrh/daily_discussion_thread_for_may_03_2021/?limit=500').then(response => { my_arr.push(countOccurences(response)) })
 
+    let my_arr = []
+    await scrapeComments('https://old.reddit.com/r/wallstreetbets/comments/n3sdrh/daily_discussion_thread_for_may_03_2021/?limit=500').then(function (response) {
+        my_arr = Object.entries(countOccurences(response));
+    })
+
+
+    console.log((my_arr))
     res.send(my_arr)
 })
 
