@@ -5,9 +5,32 @@ const puppeteer = require('puppeteer')
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+
+const stockSchema = new Schema({
+    ticker: {
+        type: String,
+        required: true
+    },
+    count: {
+        type: Number,
+        required: true
+    }
+})
+
+const stocks = mongoose.model('stock', stockSchema)
 
 const nasdaq = require('./nasdaq.js')
 app.use(cors())
+
+
+mongoose.connect('mongodb://localhost:27017/stockscraper', { useNewUrlParser: true, useUnifiedTopology: true })
+
+mongoose.connection.on('connected', () => {
+    console.log('DB Connected')
+})
 
 const PORT = process.env.PORT || 5000
 
@@ -27,7 +50,9 @@ async function scrapeComments(url) {
 
         const comment = String(await (await comments[i].getProperty('innerText')).jsonValue());
 
-        const splitComment = comment.split(' ').filter(word => word.length <= 5)
+        console.log('comment', comment)
+
+        const splitComment = comment.split(' ').filter(word => word.length <= 4)
 
 
         for (let n = 0; n < splitComment.length; n++) {
@@ -39,12 +64,19 @@ async function scrapeComments(url) {
 
     browser.close();
 
+    console.log('stockArr', stockArr)
+
     return stockArr
 
 }
 
+
+
 function countOccurences(arr) {
+
     var counts = {};
+
+
 
     console.log(arr.length)
     for (var i = 0; i < arr.length; i++) {
@@ -52,8 +84,12 @@ function countOccurences(arr) {
         counts[num] = counts[num] ? counts[num] + 1 : 1;
     }
     console.log('mycounts', counts)
+
+
     return counts
 }
+
+
 
 
 
@@ -64,10 +100,32 @@ app.post('/', async function (req, res) {
         my_arr = Object.entries(countOccurences(response));
     })
 
+    console.log('my_arr', my_arr)
 
-    console.log((my_arr))
-    res.send(my_arr)
+    console.log('length', my_arr.length)
+    for (let i = 0; i < my_arr.length; i++) {
+        stocks.findOne({ ticker: my_arr[i][0] }, await function (err, foundStock) {
+            if (err) {
+                console.log(err)
+            } else if (foundStock) {
+                stocks.updateOne({ ticker: my_arr[i][0] }, { count: my_arr[i][1] })
+            } else {
+                const newStock = new stocks({
+                    ticker: my_arr[i][0],
+                    count: my_arr[i][1]
+                })
+                newStock.save();
+            }
+        })
+    }
+
+    stocks.find({}, await function (err, foundStocks) {
+
+        console.log('foundStocks', foundStocks)
+        res.send(foundStocks)
+    })
 })
+
 
 app.listen(PORT, function (err) {
     if (err) {
