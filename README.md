@@ -1,2 +1,3 @@
 # WSB-Stock-Scraper
-Scrapes all comments for WSB daily discussions on Reddit and tracks ticker frequency. Updates every minute. To the moon 🚀
+Scrapes all comments from WSB daily discussions on Reddit and tracks ticker frequency and updates every minute. 🚀
+
