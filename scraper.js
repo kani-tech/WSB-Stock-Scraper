@@ -10,6 +10,10 @@ const Schema = mongoose.Schema;
 
 const OLD_REDDIT = 'https://old.reddit.com/r/wallstreetbets/'
 
+const monthNames = ["january", "february", "march", "april", "may", "june",
+    "july", "august", "september", "october", "november", "december"
+];
+
 
 
 const stockSchema = new Schema({
@@ -44,13 +48,24 @@ async function getId(url) {
 
     const info = await page.$$('#siteTable')
 
-    console.log('length', info.length)
+    let current = new Date()
+
+    let time = current.getHours()
+
+    console.log('time', time)
+    //console.log('length', info.length)
 
     let id = ''
     for (let i = 0; i < info.length; i++) {
         const result = (await (await info[i].getProperty('innerHTML')).jsonValue())
 
-        const PATTERN = 'discussion'
+
+        let PATTERN = ''
+        if (time >= 16) {
+            PATTERN = 'tomorrow'
+        } else {
+            PATTERN = 'discussion'
+        }
         const splitResult = result.split(' ').filter(word => word.includes(PATTERN))
 
         const findUrl = splitResult[0].slice(37)
@@ -126,6 +141,12 @@ function countOccurences(arr) {
 }
 
 
+app.get('/', async function (req, res) {
+
+    getId(OLD_REDDIT).then(response => res.send(response));
+
+
+})
 
 
 
@@ -135,7 +156,32 @@ app.post('/', async function (req, res) {
 
     const key = await getId(OLD_REDDIT);
 
-    const url = `https://old.reddit.com/r/wallstreetbets/comments/${key}/daily_discussion_thread_for_may_04_2021/?limit=500`
+    let current = new Date();
+
+
+    const month = monthNames[current.getMonth()]
+
+    let day = current.getDate()
+
+    let time = current.getHours();
+
+    let url = ``
+
+
+    if (day < 10) {
+        day = '0' + String(day)
+    }
+
+
+    if (time >= 16) {
+        url = `https://old.reddit.com/r/wallstreetbets/comments/${key}/daily_discussion_thread_for_${month}_${day}_2021/?limit=500`
+    } else {
+        url = `https://old.reddit.com/r/wallstreetbets/comments/${key}/what_are_your_moves_tomorrow_${month}_${day}_2021/`
+    }
+
+    console.log('day', day)
+
+
 
     await scrapeComments(url, key).then(function (response) {
         my_arr = Object.entries(countOccurences(response));
